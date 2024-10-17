@@ -1,63 +1,79 @@
 import pyautogui
 import time
 
-# Add a delay to ensure the screen is fully loaded
-time.sleep(2)
+class RouletteBot:
+    def __init__(self):
+        # Locate images with a confidence level
+        self.betButton = pyautogui.locateOnScreen('images/betButton.png', confidence=0.8)
+        self.redButton = 1160, 715
+        self.blackButton = 1260, 715
+        self.resetButton = pyautogui.locateOnScreen('images/resetButton.png', confidence=0.8)
+        self.doubleButton = pyautogui.locateOnScreen('images/doubleButton.png', confidence=0.8)
 
-# Locate images with a confidence level
-betButton = pyautogui.locateOnScreen('images/betButton.png', confidence=0.8)
-redButton = 1160, 715
-blackButton = 1260, 715
-resetButton = pyautogui.locateOnScreen('images/resetButton.png', confidence=0.8)
-doubleButton = pyautogui.locateOnScreen('images/doubleButton.png', confidence=0.8)
+        self.wasGreen = False
+        self.isProfit0 = True
+        self.isFirstBet = True
 
-wasGreen = False
-isProfit0 = True
+        time.sleep(2)
+        pyautogui.click(self.resetButton)
 
-def placeBets():
-    pyautogui.click(resetButton)
-    print('Placing bets...')
-    pyautogui.click(redButton)
-    pyautogui.click(blackButton)
-    pyautogui.click(betButton)
-    time.sleep(1)
+    def placeBets(self):
+        #pyautogui.click(self.resetButton)
+        print('Placing bets...')
+        pyautogui.click(self.redButton)
+        pyautogui.click(self.blackButton)
 
+    def bet(self):
+        pyautogui.click(self.betButton)
+        time.sleep(0.4)
 
-def checkIsProfit0():
-    try:
-        isProfit0 = pyautogui.locateOnScreen('images/isProfit0.png', confidence=0.9)
-        if isProfit0:
-            return True
-        else:
+    def checkIsProfit0(self):
+        try:
+            isProfit0 = pyautogui.locateOnScreen('images/isProfit0.png', confidence=0.9)
+            return isProfit0 is not None
+        except pyautogui.ImageNotFoundException:
             return False
-    except pyautogui.ImageNotFoundException:
-        return False
 
-def martingaling():
-    if checkIsProfit0():
-        print('Profit is 0! martingale is no more needed.')
-        pyautogui.click(resetButton)
-        main()
-        return
-    
-    print('Martingaling...')
-    pyautogui.click(doubleButton)
-    pyautogui.click(betButton)
+    def martingaling(self, isFirstMartingale):
+        while not self.checkIsProfit0():
+            if isFirstMartingale:
+                pyautogui.click(self.resetButton)
+                pyautogui.click(self.redButton)
+                isFirstMartingale = False
+            
+            print('Martingaling...')
+            pyautogui.click(self.doubleButton)
+            self.bet()
+            
+            if self.checkIsProfit0():
+                print('Profit is 0! martingale is no more needed.')
+                pyautogui.click(self.resetButton)
+                isFirstMartingale = True
+                self.isFirstBet = True
+                break
+            else:
+                print('Martingale failed! Restarting...')
 
-    time.sleep(1)
+    def main(self):
+        isFirstMartingale = True
+        print('Starting...')
 
-    if not checkIsProfit0():
-        martingaling()
-    else:
-        main()
+        if self.isFirstBet:
+            self.placeBets()
+            self.isFirstBet = False
 
-def main():
-    print('Starting...')
-    placeBets()
-    pyautogui.click(resetButton)
-    pyautogui.click(redButton)
-    martingaling()
-    time.sleep(1) 
-    
+        self.bet()
+
+        if not self.checkIsProfit0():
+            isFirstMartingale = True
+            pyautogui.click(self.resetButton)
+            self.martingaling(isFirstMartingale)
+
+    def run(self):
+        while True:
+            self.main()
+
 if __name__ == "__main__":
-    main()
+    bot = RouletteBot()
+
+    bot.run()
