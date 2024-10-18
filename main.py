@@ -5,8 +5,8 @@ class RouletteBot:
     def __init__(self):
         # Locate images with a confidence level
         self.betButton = pyautogui.locateOnScreen('images/betButton.png', confidence=0.8)
-        self.redButton = 1160, 715
-        self.blackButton = 1260, 715
+        self.redButton =  pyautogui.locateOnScreen('images/redButton.png', confidence=0.8)
+        self.blackButton =  pyautogui.locateOnScreen('images/blackButton.png', confidence=0.8)
         self.resetButton = pyautogui.locateOnScreen('images/resetButton.png', confidence=0.8)
         self.doubleButton = pyautogui.locateOnScreen('images/doubleButton.png', confidence=0.8)
 
@@ -33,7 +33,7 @@ class RouletteBot:
             return isProfit0 is not None
         except pyautogui.ImageNotFoundException:
             return False
-
+    
     def martingaling(self, isFirstMartingale):
         while not self.checkIsProfit0():
             if isFirstMartingale:
